@@ -1,10 +1,11 @@
 import random
+from color import Color
 
 
 class Card:
     def __init__(self):
-        colors = ["Red", "Blue", "Green", "Yellow"]
         self.num = random.randrange(1, 11)
+        colors = list(Color.__members__.values())
         self.color = random.choice(colors)
 
     def __eq__(self, other):
