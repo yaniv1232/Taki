@@ -6,7 +6,7 @@ class Card:
     def __init__(self):
         self.num = random.randrange(1, 11)
         colors = list(Color.__members__.values())
-        self.color = random.choice(colors)
+        self.color = random.choice(colors).name
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
