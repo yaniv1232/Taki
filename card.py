@@ -1,12 +1,9 @@
-import random
-from color import Color
 
 
 class Card:
-    def __init__(self):
-        self.num = random.randrange(1, 11)
-        colors = list(Color.__members__.values())
-        self.color = random.choice(colors).name
+    def __init__(self, num1, color1):
+        self.num = num1
+        self.color = color1
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
