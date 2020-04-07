@@ -7,5 +7,9 @@ class Color(enum.Enum):
     Green = 'green'
     Yellow = 'yellow'
 
+    def __str__(self):
+        return self.name
+
+
 
 
