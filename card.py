@@ -9,5 +9,5 @@ class Card:
         return self.__dict__ == other.__dict__
 
     def __str__(self):
-        return f"Card number: {self.num}, Card color: {self.color} \n"
+        return f"{self.num}-{self.color}"
 
