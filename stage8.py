@@ -14,95 +14,78 @@ def initialize_deck():
 def get_number_of_players():
     number_of_players = 0
     while number_of_players not in range(constants.PLAYERS_LOWER_LIMIT, constants.PLAYERS_UPPER_LIMIT + 1):
-        number_of_players_text = input("Enter number of players (between 2 to 6): ")
-        number_of_players = int(number_of_players_text)
+        number_of_players = int(input("Enter number of players (between 2 to 6): "))
     return number_of_players
 
 
-def initialize_players_details(number_of_players):
+def initialize_players(number_of_players, deck):
     players = []
     for i in range(number_of_players):
         name = input(f"Insert player {i} name: ")
-        age_text = input(f"Insert player {i} age: ")
-        age_number = int(age_text)
-        cards = []
-        player_details = Player(name, age_number, cards)
-        players.append(player_details)
-    players.sort(key=lambda player: player.age)
+        age = int(input(f"Insert player {i} age: "))
+        cards = [deck.pop() for j in range(constants.INITIAL_AMOUNT_OF_CARDS)]
+        player = Player(name, age, cards)
+        players.append(player)
+    players.sort(key=lambda x: x.age)
     return players
 
 
 def print_game_status(players, card_on_table, deck):
-    number_of_players = len(players)
     print("Game status:")
     print(f"There are {len(deck)} cards in the deck")
     print(f"Card on table is {card_on_table}")
-    for i in range(number_of_players):
-        player_num_of_cards = len(players[i].cards)
-        player_name = players[i].name
-        print(f"{player_name} has {player_num_of_cards} cards:", end=" ")
-        print(*players[i].cards)
+    for player in players:
+        cards_text = [str(card) for card in player.cards]
+        print(f"{player.name} has {len(player.cards)} cards: {cards_text}")
     print("")
 
 
-def declare_winner(players, winner_index):
-    winner_index = 0
+def declare_winner(players):
     winner_num_of_cards = len(players[0].cards)
-    number_of_players = len(players)
-    for i in range(1, number_of_players):
-        player_num_of_cards = len(players[i].cards)
-        if player_num_of_cards < winner_num_of_cards:
-            winner_index = i
-            winner_num_of_cards = player_num_of_cards
-    winner_name = players[winner_index].name
+    winner = players[0]
+    for player in players:
+        if len(player.cards) < winner_num_of_cards:
+            winner = player
+            winner_num_of_cards = len(player.cards)
     if not winner_num_of_cards:
-        print(f"{winner_name} won with 0 cards")
+        print(f"{winner.name} won with 0 cards")
     else:
-        print(f"Game is over, the deck is empty. {winner_name} won with {winner_num_of_cards} cards")
+        print(f"Game is over, the deck is empty. {winner.name} won with {winner_num_of_cards} cards")
 
 
 def main():
     deck = initialize_deck()
     number_of_players = get_number_of_players()
-    players = initialize_players_details(number_of_players)
-
-    for i in range(number_of_players):
-        players[i].cards = [deck.pop() for j in range(3)]
+    players = initialize_players(number_of_players, deck)
 
     card_on_table = deck.pop()
-    winner_index = 0
     player_turn = 0
 
-    print(f"Game started with {number_of_players} players and {card_on_table} on the table \n")
+    print(f"\n *** Game started *** \n")
+    print_game_status(players, card_on_table, deck)
 
     while deck:
         player_has_card = False
-        player_name = players[player_turn].name
-        player_cards = players[player_turn].cards
-        player_num_of_cards = len(player_cards)
-        for card in range(player_num_of_cards):
-            player_current_card = player_cards[card]
-            if player_current_card.color == card_on_table.color or player_current_card.num == card_on_table.num:
-                card_on_table = player_current_card
-                player_cards.remove(player_current_card)
+        current_player = players[player_turn]
+        for card in current_player.cards:
+            if card.color == card_on_table.color or card.num == card_on_table.num:
+                card_on_table = card
+                current_player.cards.remove(card)
                 player_has_card = True
-                player_num_of_cards -= 1
-                print(f"{player_name} discarded {card_on_table} (player left with {player_num_of_cards} cards) \n")
+                print(f"{current_player.name} discarded {card_on_table} (player left with {len(current_player.cards)} cards) \n")
                 break
-        if player_num_of_cards == 0:
-            winner_index = player_turn
+        if len(current_player.cards) == 0:
             break
         if not player_has_card:
             pulled_card = deck.pop()
-            print(f"{player_name} pulled {pulled_card} from the deck ({len(deck)} cards left in the deck) \n")
-            player_cards.append(pulled_card)
-            player_num_of_cards += 1
+            print(f"{current_player.name} pulled {pulled_card} from the deck ({len(deck)} cards left in the deck) \n")
+            current_player.cards.append(pulled_card)
         player_turn += 1
         print_game_status(players, card_on_table, deck)
         if player_turn == number_of_players:
             player_turn = 0
 
-    declare_winner(players, winner_index)
+    declare_winner(players)
 
 
 if __name__ == "__main__":
