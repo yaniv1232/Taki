@@ -7,7 +7,10 @@ import random
 
 def initialize_deck():
     deck = [Card(num, color) for color in Color for num in range(1, 10)]
+    for i in range(constants.CHANGE_COLOR_AMOUNT):
+        deck.append(Card(True))
     random.shuffle(deck)
+    print([str(card) for card in deck])
     return deck
 
 
@@ -41,16 +44,14 @@ def print_game_status(players, card_on_table, deck):
 
 
 def declare_winner(players):
-    winner_num_of_cards = len(players[0].cards)
     winner = players[0]
     for player in players:
-        if len(player.cards) < winner_num_of_cards:
+        if len(player.cards) < len(winner.cards):
             winner = player
-            winner_num_of_cards = len(player.cards)
-    if not winner_num_of_cards:
+    if not len(winner.cards):
         print(f"{winner.name} won with 0 cards")
     else:
-        print(f"Game is over, the deck is empty. {winner.name} won with {winner_num_of_cards} cards")
+        print(f"Game is over, the deck is empty. {winner.name} won with {len(winner.cards)} cards")
 
 
 def main():
@@ -66,20 +67,20 @@ def main():
 
     while deck:
         player_has_card = False
-        current_player = players[player_turn]
-        for card in current_player.cards:
+        player = players[player_turn]
+        for card in player.cards:
             if card.color == card_on_table.color or card.num == card_on_table.num:
                 card_on_table = card
-                current_player.cards.remove(card)
+                player.cards.remove(card)
                 player_has_card = True
-                print(f"{current_player.name} discarded {card_on_table} (player left with {len(current_player.cards)} cards) \n")
+                print(f"{player.name} discarded {card_on_table} (player left with {len(player.cards)} cards) \n")
                 break
-        if len(current_player.cards) == 0:
+        if not len(player.cards):
             break
         if not player_has_card:
             pulled_card = deck.pop()
-            print(f"{current_player.name} pulled {pulled_card} from the deck ({len(deck)} cards left in the deck) \n")
-            current_player.cards.append(pulled_card)
+            print(f"{player.name} pulled {pulled_card} from the deck ({len(deck)} cards left in the deck) \n")
+            player.cards.append(pulled_card)
         player_turn += 1
         print_game_status(players, card_on_table, deck)
         if player_turn == number_of_players:

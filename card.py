@@ -1,9 +1,10 @@
 
 
 class Card:
-    def __init__(self, num1, color1):
-        self.num = num1
-        self.color = color1
+    def __init__(self, num=0, color="white", change_color=False):
+        self.num = num
+        self.color = color
+        self.change_color = change_color
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
