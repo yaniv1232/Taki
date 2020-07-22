@@ -13,8 +13,7 @@ class Game(Player, Card):
 
     def initialize_deck(self):
         self.deck = [Card(num, color) for color in Color for num in range(1, 10)]
-        for i in range(constants.CHANGE_COLOR_AMOUNT):
-            self.deck.append(Card(is_change_color=True))
+        self.deck += [Card(is_change_color=True) for i in range(constants.CHANGE_COLOR_CARD_AMOUNT)]
         random.shuffle(self.deck)
 
     @staticmethod
@@ -29,14 +28,14 @@ class Game(Player, Card):
         for i in range(number_of_players):
             name = input(f"Insert player {i} name: ")
             age = int(input(f"Insert player {i} age: "))
-            cards = [self.deck.pop() for j in range(constants.INITIAL_PLAYER_AMOUNT_OF_CARDS)]
+            cards = [self.deck.pop() for j in range(constants.INITIAL_AMOUNT_OF_CARDS_PER_PLAYER)]
             player = Player(name, age, cards)
             self.players.append(player)
         self.players.sort(key=lambda x: x.age)
 
     def put_initial_card_on_table(self):
         self.card_on_table = self.deck.pop()
-        while self.card_on_table.change_color:
+        while self.card_on_table.is_change_color:
             self.deck.append(self.card_on_table)
             random.shuffle(self.deck)
             self.card_on_table = self.deck.pop()
@@ -44,7 +43,7 @@ class Game(Player, Card):
     @staticmethod
     def find_most_common_color(cards):
         cards_colors = [card.color for card in cards if card.color]
-        if not len(cards_colors):
+        if not cards_colors:
             return None
         most_common_color = max(set(cards_colors), key=cards_colors.count)
         return most_common_color
@@ -61,25 +60,24 @@ class Game(Player, Card):
     def put_down_card_on_table(self, player, card):
         self.card_on_table = card
         player.cards.remove(card)
+        print(f"{player.name} discarded {self.card_on_table} (player left with {len(player.cards)} cards) \n")
 
-    def play_matching_number_or_color_card(self, player):
+    def try_playing_matching_number_or_color_card(self, player):
         for card in player.cards:
             if card.color == self.card_on_table.color or card.num == self.card_on_table.num:
                 self.put_down_card_on_table(player, card)
-                print(f"{player.name} discarded {self.card_on_table} (player left with {len(player.cards)} cards) \n")
                 return True
         return False
 
-    def play_change_color_card(self, player):
+    def try_playing_change_color_card(self, player):
         for card in player.cards:
-            if card.change_color:
-                self.put_down_card_on_table(player, card)
+            if card.is_change_color:
                 most_common_color = Game.find_most_common_color(player.cards)
-                if most_common_color is not None:
-                    self.card_on_table.color = most_common_color
+                if most_common_color:
+                    card.color = most_common_color
                 else:
-                    self.card_on_table.color = random.choice(Color.get_list_of_colors())
-                print(f"{player.name} discarded {self.card_on_table} (player left with {len(player.cards)} cards) \n")
+                    card.color = random.choice(Color.get_list_of_colors())
+                self.put_down_card_on_table(player, card)
                 return True
         return False
 
@@ -93,7 +91,7 @@ class Game(Player, Card):
         for player in self.players:
             if len(player.cards) < len(winner.cards):
                 winner = player
-        if not len(winner.cards):
+        if not winner.cards:
             print(f"{winner.name} won with 0 cards")
         else:
             print(f"Game is over, the deck is empty. {winner.name} won with {len(winner.cards)} cards")
@@ -109,11 +107,10 @@ class Game(Player, Card):
         while self.deck:
             player_played_card = False
             player = self.players[player_turn]
-            if self.play_matching_number_or_color_card(player):
+            if self.try_playing_matching_number_or_color_card(player):
                 player_played_card = True
-            if not player_played_card:
-                if self.play_change_color_card(player):
-                    player_played_card = True
+            if not player_played_card and self.try_playing_change_color_card(player):
+                player_played_card = True
             if not player.cards:
                 break
             if not player_played_card:

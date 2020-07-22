@@ -10,8 +10,9 @@ class Color(enum.Enum):
     def __str__(self):
         return self.name
 
-    def get_list_of_colors(self):
-        return [self.name for color in self]
+    @staticmethod
+    def get_list_of_colors():
+        return [color.name for color in Color]
 
 
 
