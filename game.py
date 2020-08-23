@@ -1,31 +1,35 @@
 from card import Card
-from color import Color
+from card_type import CardType
 from player import Player
 import constants
 import random
 
 
-class Game(Player, Card):
+class Game:
     def __init__(self):
         self.card_on_table = None
         self.players = None
         self.deck = None
+        self.player_turn = 0
+        self.number_of_players = None
 
     def initialize_deck(self):
-        self.deck = [Card(num, color) for color in Color for num in range(1, 10)]
-        self.deck += [Card(is_change_color=True) for i in range(constants.CHANGE_COLOR_CARD_AMOUNT)]
+        self.deck = [Card(num, color, card_type=CardType.Regular_Card) for color in constants.COLORS
+                     for num in range(constants.CARD_MIN_NUMERIC_VALUE, constants.CARD_MAX_NUMERIC_VALUE)]
+        self.deck += [Card(color=random.choice(constants.COLORS), card_type=CardType.Stop_Card)
+                      for i in range(constants.AMOUNT_OF_STOP_CARDS)]
+        self.deck += [Card(card_type=CardType.Change_Color_Card) for i in range(constants.AMOUNT_OF_CHANGE_COLOR_CARDS)]
         random.shuffle(self.deck)
 
-    @staticmethod
-    def get_number_of_players():
-        number_of_players = 0
-        while number_of_players not in range(constants.PLAYERS_LOWER_LIMIT, constants.PLAYERS_UPPER_LIMIT + 1):
-            number_of_players = int(input("Enter number of players (between 2 to 6): "))
-        return number_of_players
+    def update_number_of_players_from_user_input(self):
+        while self.number_of_players not in range(constants.PLAYERS_LOWER_LIMIT, constants.PLAYERS_UPPER_LIMIT + 1):
+            self.number_of_players = int(input(f'Enter number of players (between {constants.PLAYERS_LOWER_LIMIT} '
+                                               f'to {constants.PLAYERS_UPPER_LIMIT}): '))
 
-    def initialize_players_data(self, number_of_players):
+    def initialize_players_data(self):
         self.players = []
-        for i in range(number_of_players):
+        self.update_number_of_players_from_user_input()
+        for i in range(self.number_of_players):
             name = input(f"Insert player {i} name: ")
             age = int(input(f"Insert player {i} age: "))
             cards = [self.deck.pop() for j in range(constants.INITIAL_AMOUNT_OF_CARDS_PER_PLAYER)]
@@ -33,12 +37,13 @@ class Game(Player, Card):
             self.players.append(player)
         self.players.sort(key=lambda x: x.age)
 
-    def put_initial_card_on_table(self):
+    def put_down_initial_card_on_table(self):
         self.card_on_table = self.deck.pop()
-        while self.card_on_table.is_change_color:
+        while self.card_on_table.card_type == CardType.Change_Color_Card:
             self.deck.append(self.card_on_table)
             random.shuffle(self.deck)
             self.card_on_table = self.deck.pop()
+        self.card_on_table.is_initial_card = True
 
     @staticmethod
     def find_most_common_color(cards):
@@ -62,21 +67,30 @@ class Game(Player, Card):
         player.cards.remove(card)
         print(f"{player.name} discarded {self.card_on_table} (player left with {len(player.cards)} cards) \n")
 
-    def try_playing_matching_number_or_color_card(self, player):
+    def try_playing_numeric_card_with_matching_number_or_color(self, player):
         for card in player.cards:
-            if card.color == self.card_on_table.color or card.num == self.card_on_table.num:
+            if (card.color == self.card_on_table.color or card.num == self.card_on_table.num) and \
+                    card.card_type == CardType.Regular_Card:
                 self.put_down_card_on_table(player, card)
+                return True
+        return False
+
+    def try_playing_stop_card(self, player):
+        for card in player.cards:
+            if card.card_type == CardType.Stop_Card and card.color == self.card_on_table.color:
+                self.put_down_card_on_table(player, card)
+                self.block_player()
                 return True
         return False
 
     def try_playing_change_color_card(self, player):
         for card in player.cards:
-            if card.is_change_color:
+            if card.card_type == CardType.Change_Color_Card:
                 most_common_color = Game.find_most_common_color(player.cards)
                 if most_common_color:
                     card.color = most_common_color
                 else:
-                    card.color = random.choice(Color.get_list_of_colors())
+                    card.color = random.choice(constants.COLORS)  # BUG - card.color is a string
                 self.put_down_card_on_table(player, card)
                 return True
         return False
@@ -85,6 +99,23 @@ class Game(Player, Card):
         pulled_card = self.deck.pop()
         print(f"{player.name} pulled {pulled_card} from the deck ({len(self.deck)} cards left in the deck) \n")
         player.cards.append(pulled_card)
+
+    def block_player(self):
+        if self.card_on_table.is_initial_card_on_table:
+            self.notify_player_was_blocked()
+            self.advance_to_next_player_turn()
+        else:
+            self.advance_to_next_player_turn()
+            self.notify_player_was_blocked()
+
+    def notify_player_was_blocked(self):
+        blocked_player = self.players[self.player_turn]
+        print(f"{blocked_player.name}'s turn was blocked by a stop card\n")
+
+    def advance_to_next_player_turn(self):
+        self.player_turn += 1
+        if self.player_turn >= self.number_of_players:
+            self.player_turn = 0
 
     def declare_winner(self):
         winner = self.players[0]
@@ -98,27 +129,27 @@ class Game(Player, Card):
 
     def play_game(self):
         self.initialize_deck()
-        number_of_players = self.get_number_of_players()
-        self.initialize_players_data(number_of_players)
-        self.put_initial_card_on_table()
-        player_turn = 0
-        print(f"\n *** Game started *** \n")
+        self.initialize_players_data()
+        self.put_down_initial_card_on_table()
+        print(f"\n *** Game has started *** \n")
         self.print_game_status()
+        if self.card_on_table.card_type == CardType.Stop_Card:
+            self.block_player()
         while self.deck:
             player_played_card = False
-            player = self.players[player_turn]
-            if self.try_playing_matching_number_or_color_card(player):
+            player = self.players[self.player_turn]
+            if self.try_playing_numeric_card_with_matching_number_or_color(player):
                 player_played_card = True
-            if not player_played_card and self.try_playing_change_color_card(player):
+            elif self.try_playing_stop_card(player):
+                player_played_card = True
+            elif self.try_playing_change_color_card(player):
                 player_played_card = True
             if not player.cards:
                 break
             if not player_played_card:
                 self.pull_card_from_deck(player)
-            player_turn += 1
             self.print_game_status()
-            if player_turn == number_of_players:
-                player_turn = 0
+            self.advance_to_next_player_turn()
 
         self.declare_winner()
 
