@@ -43,6 +43,7 @@ class Game:
             self.deck.append(self.card_on_table)
             random.shuffle(self.deck)
             self.card_on_table = self.deck.pop()
+        self.card_on_table.is_initial_card = True
 
     @staticmethod
     def find_most_common_color(cards):
@@ -78,7 +79,7 @@ class Game:
         for card in player.cards:
             if card.card_type == CardType.Stop_Card and card.color == self.card_on_table.color:
                 self.put_down_card_on_table(player, card)
-                self.block_the_next_player()
+                self.block_player()
                 return True
         return False
 
@@ -99,13 +100,13 @@ class Game:
         print(f"{player.name} pulled {pulled_card} from the deck ({len(self.deck)} cards left in the deck) \n")
         player.cards.append(pulled_card)
 
-    def block_the_next_player(self):
-        self.advance_to_next_player_turn()
-        self.notify_player_was_blocked()
-
-    def block_initial_player(self):
-        self.notify_player_was_blocked()
-        self.advance_to_next_player_turn()
+    def block_player(self):
+        if self.card_on_table.is_initial_card_on_table:
+            self.notify_player_was_blocked()
+            self.advance_to_next_player_turn()
+        else:
+            self.advance_to_next_player_turn()
+            self.notify_player_was_blocked()
 
     def notify_player_was_blocked(self):
         blocked_player = self.players[self.player_turn]
@@ -133,7 +134,7 @@ class Game:
         print(f"\n *** Game has started *** \n")
         self.print_game_status()
         if self.card_on_table.card_type == CardType.Stop_Card:
-            self.block_initial_player()
+            self.block_player()
         while self.deck:
             player_played_card = False
             player = self.players[self.player_turn]
