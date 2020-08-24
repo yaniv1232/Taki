@@ -2,11 +2,11 @@ from card_type import CardType
 
 
 class Card:
-    def __init__(self, num=None, color=None, card_type=None, is_initial_card_on_table=False):
+    def __init__(self, num=None, color=None, card_type=None, is_the_initial_card_on_table=False):
         self.num = num
         self.color = color
         self.card_type = card_type
-        self.is_initial_card_on_table = is_initial_card_on_table
+        self.is_initial_card_on_table = is_the_initial_card_on_table
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

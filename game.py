@@ -45,61 +45,6 @@ class Game:
             self.card_on_table = self.deck.pop()
         self.card_on_table.is_initial_card = True
 
-    @staticmethod
-    def find_most_common_color(cards):
-        cards_colors = [card.color for card in cards if card.color]
-        if not cards_colors:
-            return None
-        most_common_color = max(set(cards_colors), key=cards_colors.count)
-        return most_common_color
-
-    def print_game_status(self):
-        print("Game status:")
-        print(f"There are {len(self.deck)} cards in the deck")
-        print(f"Card on table is {self.card_on_table}")
-        for player in self.players:
-            cards_text = [str(card) for card in player.cards]
-            print(f"{player.name} has {len(player.cards)} cards: {cards_text}")
-        print("")
-
-    def put_down_card_on_table(self, player, card):
-        self.card_on_table = card
-        player.cards.remove(card)
-        print(f"{player.name} discarded {self.card_on_table} (player left with {len(player.cards)} cards) \n")
-
-    def try_playing_numeric_card_with_matching_number_or_color(self, player):
-        for card in player.cards:
-            if (card.color == self.card_on_table.color or card.num == self.card_on_table.num) and \
-                    card.card_type == CardType.Regular_Card:
-                self.put_down_card_on_table(player, card)
-                return True
-        return False
-
-    def try_playing_stop_card(self, player):
-        for card in player.cards:
-            if card.card_type == CardType.Stop_Card and card.color == self.card_on_table.color:
-                self.put_down_card_on_table(player, card)
-                self.block_player()
-                return True
-        return False
-
-    def try_playing_change_color_card(self, player):
-        for card in player.cards:
-            if card.card_type == CardType.Change_Color_Card:
-                most_common_color = Game.find_most_common_color(player.cards)
-                if most_common_color:
-                    card.color = most_common_color
-                else:
-                    card.color = random.choice(constants.COLORS)  # BUG - card.color is a string
-                self.put_down_card_on_table(player, card)
-                return True
-        return False
-
-    def pull_card_from_deck(self, player):
-        pulled_card = self.deck.pop()
-        print(f"{player.name} pulled {pulled_card} from the deck ({len(self.deck)} cards left in the deck) \n")
-        player.cards.append(pulled_card)
-
     def block_player(self):
         if self.card_on_table.is_initial_card_on_table:
             self.notify_player_was_blocked()
@@ -111,6 +56,15 @@ class Game:
     def notify_player_was_blocked(self):
         blocked_player = self.players[self.player_turn]
         print(f"{blocked_player.name}'s turn was blocked by a stop card\n")
+
+    def print_game_status(self):
+        print("Game status:")
+        print(f"There are {len(self.deck)} cards in the deck")
+        print(f"Card on table is {self.card_on_table}")
+        for player in self.players:
+            cards_text = [str(card) for card in player.cards]
+            print(f"{player.name} has {len(player.cards)} cards: {cards_text}")
+        print("")
 
     def advance_to_next_player_turn(self):
         self.player_turn += 1
@@ -138,16 +92,12 @@ class Game:
         while self.deck:
             player_played_card = False
             player = self.players[self.player_turn]
-            if self.try_playing_numeric_card_with_matching_number_or_color(player):
-                player_played_card = True
-            elif self.try_playing_stop_card(player):
-                player_played_card = True
-            elif self.try_playing_change_color_card(player):
+            if player.try_playing_a_card(self):
                 player_played_card = True
             if not player.cards:
                 break
             if not player_played_card:
-                self.pull_card_from_deck(player)
+                player.pull_card_from_deck(self)
             self.print_game_status()
             self.advance_to_next_player_turn()
 
