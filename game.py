@@ -12,6 +12,7 @@ class Game:
         self.deck = None
         self.player_turn = 0
         self.number_of_players = None
+        self.direction_of_play = 1
 
     def play_game(self):
         self.initialize_deck()
@@ -21,6 +22,8 @@ class Game:
         self.print_game_status()
         if self.card_on_table.card_type == CardType.Stop_Card:
             self.block_player()
+        elif self.card_on_table.card_type == CardType.Switch_Direction_Card:
+            self.switch_direction_of_play()
         while self.deck:
             player_played_card = False
             player = self.players[self.player_turn]
@@ -40,7 +43,10 @@ class Game:
                      for num in range(constants.CARD_MIN_NUMERIC_VALUE, constants.CARD_MAX_NUMERIC_VALUE)]
         self.deck += [Card(color=random.choice(constants.COLORS), card_type=CardType.Stop_Card)
                       for i in range(constants.AMOUNT_OF_STOP_CARDS)]
-        self.deck += [Card(card_type=CardType.Change_Color_Card) for i in range(constants.AMOUNT_OF_CHANGE_COLOR_CARDS)]
+        self.deck += [Card(card_type=CardType.Switch_Color_Card) for i in range(constants.AMOUNT_OF_SWITCH_COLOR_CARDS)]
+        for color in constants.COLORS:
+            self.deck += [Card(card_type=CardType.Switch_Direction_Card, color=color)
+                          for i in range(constants.AMOUNT_OF_SWITCH_DIRECTION_CARDS_PER_COLOR)]
         random.shuffle(self.deck)
 
     def update_number_of_players_from_user_input(self):
@@ -61,7 +67,7 @@ class Game:
 
     def put_down_initial_card_on_table(self):
         self.card_on_table = self.deck.pop()
-        while self.card_on_table.card_type == CardType.Change_Color_Card:
+        while self.card_on_table.card_type == CardType.Switch_Color_Card:
             self.deck.append(self.card_on_table)
             random.shuffle(self.deck)
             self.card_on_table = self.deck.pop()
@@ -89,9 +95,14 @@ class Game:
         print("")
 
     def advance_to_next_player_turn(self):
-        self.player_turn += 1
+        self.player_turn += self.direction_of_play
         if self.player_turn >= self.number_of_players:
             self.player_turn = 0
+        elif self.player_turn < 0:
+            self.player_turn = self.number_of_players - 1
+
+    def switch_direction_of_play(self):
+        self.direction_of_play *= -1
 
     def declare_winner(self):
         winner = self.players[0]

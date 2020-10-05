@@ -15,7 +15,9 @@ class Player:
             return True
         elif self.try_playing_stop_card(game):
             return True
-        elif self.try_playing_change_color_card(game):
+        elif self.try_playing_switch_direction_card(game):
+            return True
+        elif self.try_playing_switch_color_card(game):
             return True
         return False
 
@@ -35,9 +37,17 @@ class Player:
                 return True
         return False
 
-    def try_playing_change_color_card(self, game):
+    def try_playing_switch_direction_card(self, game):
         for card in self.cards:
-            if card.card_type == CardType.Change_Color_Card:
+            if card.card_type == CardType.Switch_Direction_Card and card.color == game.card_on_table.color:
+                game.switch_direction_of_play()
+                self.put_down_card_on_table(card, game)
+                return True
+        return False
+
+    def try_playing_switch_color_card(self, game):
+        for card in self.cards:
+            if card.card_type == CardType.Switch_Color_Card:
                 most_common_color = Color.find_most_common_color(self.cards)
                 if most_common_color:
                     card.color = most_common_color

@@ -12,13 +12,15 @@ class Card:
         return self.__dict__ == other.__dict__
 
     def __str__(self):
-        if self.card_type == CardType.Change_Color_Card:
+        if self.card_type == CardType.Switch_Color_Card:
             if self.color:
-                return f"Change Color to {self.color}"
+                return f"Switch Color to {self.color}"
             else:
-                return f"Change Color"
+                return f"Switch Color"
         elif self.card_type == CardType.Stop_Card:
             return f"Stop Card-{self.color}"
+        elif self.card_type == CardType.Switch_Direction_Card:
+            return f"Switch Direction-{self.color}"
         else:
             return f"{self.num}-{self.color}"
 
