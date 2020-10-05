@@ -6,7 +6,7 @@ class Card:
         self.num = num
         self.color = color
         self.card_type = card_type
-        self.is_initial_card_on_table = is_the_initial_card_on_table
+        self.is_the_initial_card_on_table = is_the_initial_card_on_table
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

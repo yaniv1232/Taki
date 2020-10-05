@@ -42,7 +42,7 @@ class Player:
                 if most_common_color:
                     card.color = most_common_color
                 else:
-                    card.color = random.choice(constants.COLORS)  # BUG - card.color is a string
+                    card.color = random.choice(constants.COLORS)
                 self.put_down_card_on_table(card, game)
                 return True
         return False

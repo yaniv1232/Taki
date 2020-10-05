@@ -13,6 +13,28 @@ class Game:
         self.player_turn = 0
         self.number_of_players = None
 
+    def play_game(self):
+        self.initialize_deck()
+        self.initialize_players_data()
+        self.put_down_initial_card_on_table()
+        print(f"\n *** Game has started *** \n")
+        self.print_game_status()
+        if self.card_on_table.card_type == CardType.Stop_Card:
+            self.block_player()
+        while self.deck:
+            player_played_card = False
+            player = self.players[self.player_turn]
+            if player.try_playing_a_card(self):
+                player_played_card = True
+            if not player.cards:
+                break
+            if not player_played_card:
+                player.pull_card_from_deck(self)
+            self.print_game_status()
+            self.advance_to_next_player_turn()
+
+        self.declare_winner()
+
     def initialize_deck(self):
         self.deck = [Card(num, color, card_type=CardType.Regular_Card) for color in constants.COLORS
                      for num in range(constants.CARD_MIN_NUMERIC_VALUE, constants.CARD_MAX_NUMERIC_VALUE)]
@@ -46,7 +68,7 @@ class Game:
         self.card_on_table.is_initial_card = True
 
     def block_player(self):
-        if self.card_on_table.is_initial_card_on_table:
+        if self.card_on_table.is_the_initial_card_on_table:
             self.notify_player_was_blocked()
             self.advance_to_next_player_turn()
         else:
@@ -80,26 +102,3 @@ class Game:
             print(f"{winner.name} won with 0 cards")
         else:
             print(f"Game is over, the deck is empty. {winner.name} won with {len(winner.cards)} cards")
-
-    def play_game(self):
-        self.initialize_deck()
-        self.initialize_players_data()
-        self.put_down_initial_card_on_table()
-        print(f"\n *** Game has started *** \n")
-        self.print_game_status()
-        if self.card_on_table.card_type == CardType.Stop_Card:
-            self.block_player()
-        while self.deck:
-            player_played_card = False
-            player = self.players[self.player_turn]
-            if player.try_playing_a_card(self):
-                player_played_card = True
-            if not player.cards:
-                break
-            if not player_played_card:
-                player.pull_card_from_deck(self)
-            self.print_game_status()
-            self.advance_to_next_player_turn()
-
-        self.declare_winner()
-
