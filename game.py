@@ -3,6 +3,7 @@ from card_type import CardType
 from player import Player
 import constants
 import random
+from direction_of_play import DirectionOfPlay
 
 
 class Game:
@@ -12,7 +13,7 @@ class Game:
         self.deck = None
         self.player_turn = 0
         self.number_of_players = None
-        self.direction_of_play = 1
+        self.direction_of_play = DirectionOfPlay.YoungestToOldest
 
     def play_game(self):
         self.initialize_deck()
@@ -95,14 +96,17 @@ class Game:
         print("")
 
     def advance_to_next_player_turn(self):
-        self.player_turn += self.direction_of_play
+        self.player_turn += self.direction_of_play.value
         if self.player_turn >= self.number_of_players:
             self.player_turn = 0
         elif self.player_turn < 0:
             self.player_turn = self.number_of_players - 1
 
     def switch_direction_of_play(self):
-        self.direction_of_play *= -1
+        if self.direction_of_play == DirectionOfPlay.YoungestToOldest:
+            self.direction_of_play = DirectionOfPlay.OldestToYoungest
+        else:
+            self.direction_of_play = DirectionOfPlay.YoungestToOldest
 
     def declare_winner(self):
         winner = self.players[0]
